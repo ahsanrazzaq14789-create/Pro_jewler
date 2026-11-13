@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: goldapp
+      POSTGRES_USER: goldapp
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-goldpass}
+    volumes:
+      - gold_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U goldapp -d goldapp"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  api:
+    build: ./backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+volumes:
+  gold_pgdata:
